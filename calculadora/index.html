@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Calculadora gratuita: descubra o preço de venda certo do seu produto, contando custo, impostos, taxas e contas fixas.">
+<style>:root{color-scheme:light}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Calculadora de Preço de Venda</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600&display=swap">
+<style>
+/* Layout: cabeçalho curto; duas colunas (dados | resultado) que viram uma no celular; convite para a planilha no fim */
+:root{
+  --bg:#F3F5F9; --surface:#FFFFFF; --ink:#1B2B42; --muted:#5B6B80; --line:#DCE3EC;
+  --navy:#1F3A5F; --gold:#E3B505; --gold-ink:#1F3A5F; --field:#F7F9FC;
+  --seg-custo:#1F3A5F; --seg-imp:#7A8CA6; --seg-taxa:#A9B7CA; --seg-fixas:#E3B505; --seg-lucro:#2E8B57;
+  --ok:#2E8B57; --ok-bg:#E3F4EA; --warn:#8A6400; --warn-bg:#FFF3C4; --bad:#B3261E; --bad-bg:#FDE4E1;
+  --f-display:"Poppins",system-ui,sans-serif; --f-body:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0F1724; --surface:#172234; --ink:#E6ECF4; --muted:#9AA8BC; --line:#2A3A52;
+  --navy:#9DB8DD; --gold:#F2C832; --gold-ink:#10203A; --field:#1D2A3F;
+  --seg-custo:#5E86BD; --seg-imp:#8293AD; --seg-taxa:#B4C1D3; --seg-fixas:#F2C832; --seg-lucro:#4FBF84;
+  --ok:#6FD39C; --ok-bg:#163527; --warn:#F2C832; --warn-bg:#3A3112; --bad:#FF8A80; --bad-bg:#3D1C1A; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0F1724; --surface:#172234; --ink:#E6ECF4; --muted:#9AA8BC; --line:#2A3A52;
+  --navy:#9DB8DD; --gold:#F2C832; --gold-ink:#10203A; --field:#1D2A3F;
+  --seg-custo:#5E86BD; --seg-imp:#8293AD; --seg-taxa:#B4C1D3; --seg-fixas:#F2C832; --seg-lucro:#4FBF84;
+  --ok:#6FD39C; --ok-bg:#163527; --warn:#F2C832; --warn-bg:#3A3112; --bad:#FF8A80; --bad-bg:#3D1C1A; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.5}
+.wrap{max-width:1040px;margin:0 auto;padding-block:32px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:28px}
+header{display:grid;gap:10px;max-width:720px}
+.eyebrow{font-size:13px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+h1{font-family:var(--f-display);font-weight:700;font-size:clamp(30px,5vw,44px);line-height:1.1;margin:0;text-wrap:balance}
+h1 em{font-style:normal;background:linear-gradient(transparent 62%,var(--gold) 62%);color:inherit}
+header p{margin:0;color:var(--muted);max-width:62ch}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{font:500 15px var(--f-body);padding:8px 16px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--navy);border-color:var(--navy);color:var(--surface)}
+.chip:focus-visible,input:focus-visible,a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:24px;align-items:start}
+@media (max-width:820px){.grid{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:24px;display:grid;gap:18px;min-width:0}
+.panel h2{font-family:var(--f-display);font-size:19px;font-weight:600;margin:0}
+.field{display:grid;gap:6px;align-content:start}
+.field label{font-weight:600;font-size:15px}
+.field small{color:var(--muted);font-size:13px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:420px){.row2{grid-template-columns:1fr}}
+.inp{display:flex;align-items:center;border:1px solid var(--line);border-radius:10px;background:var(--field);overflow:hidden}
+.inp span{padding:0 12px;color:var(--muted);font-weight:500;font-size:15px}
+.inp input{flex:1;min-width:0;border:0;background:transparent;color:var(--ink);font:500 17px var(--f-body);padding:11px 12px;font-variant-numeric:tabular-nums}
+.inp input:focus{outline:none}.inp:focus-within{border-color:var(--navy)}
+.inp span:first-child{padding-right:0}
+.res{position:sticky;top:calc(env(safe-area-inset-top,0px) + 16px)}
+.price-label{font-size:14px;color:var(--muted);font-weight:500}
+.price{font-family:var(--f-display);font-weight:700;font-size:clamp(44px,8vw,64px);line-height:1;color:var(--ink);font-variant-numeric:tabular-nums}
+.sub{display:flex;flex-wrap:wrap;gap:8px 20px;color:var(--muted);font-size:15px}
+.sub b{color:var(--ink);font-variant-numeric:tabular-nums}
+.bar{display:flex;height:22px;border-radius:6px;overflow:hidden;background:var(--line)}
+.bar i{display:block;height:100%;transition:width .3s}
+@media (prefers-reduced-motion:reduce){.bar i{transition:none}}
+.legend{display:grid;gap:6px;margin:0;padding:0;list-style:none;font-size:15px}
+.legend li{display:grid;grid-template-columns:12px 1fr auto auto;gap:10px;align-items:center}
+.legend .sw{width:12px;height:12px;border-radius:3px}
+.legend .v{font-variant-numeric:tabular-nums;font-weight:600;text-align:right}
+.legend .p{font-variant-numeric:tabular-nums;color:var(--muted);width:4.2em;text-align:right}
+.note{padding:12px 14px;border-radius:10px;font-size:15px}
+.note.ok{background:var(--ok-bg);color:var(--ok)}.note.warn{background:var(--warn-bg);color:var(--warn)}.note.bad{background:var(--bad-bg);color:var(--bad)}
+.note strong{display:block}
+hr{border:0;border-top:1px solid var(--line);margin:0}
+.cta{background:var(--navy);color:var(--surface);border-radius:16px;padding:26px 24px;display:grid;gap:14px}
+.cta h2{font-family:var(--f-display);font-size:22px;margin:0;text-wrap:balance}
+.cta p{margin:0;opacity:.9;max-width:62ch}
+.cta ul{margin:0;padding-left:20px;display:grid;gap:4px}
+.btn{justify-self:start;display:inline-block;background:var(--gold);color:var(--gold-ink);font:600 17px var(--f-body);padding:13px 22px;border-radius:10px;text-decoration:none}
+.others{font-size:14px;opacity:.85}.others a{color:inherit}
+footer{color:var(--muted);font-size:13px;max-width:72ch}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Calculadora gratuita</div>
+    <h1>Quanto cobrar pelo seu <em>produto</em>?</h1>
+    <p>Coloque o custo, as taxas e as contas do mês. A calculadora mostra o preço de venda que paga tudo e ainda deixa o lucro que você quer.</p>
+    <div class="chips" role="group" aria-label="Tipo de negócio">
+      <button class="chip" data-n="confeitaria">Confeitaria</button>
+      <button class="chip" data-n="marmitas">Marmitas</button>
+      <button class="chip" data-n="salgados">Salgados</button>
+      <button class="chip" data-n="salao">Salão de beleza</button>
+      <button class="chip" data-n="outro">Outro negócio</button>
+    </div>
+  </header>
+
+  <div class="grid">
+    <form class="panel" id="f" autocomplete="off">
+      <h2>Seus números <span id="ex" style="font:500 13px var(--f-body);color:var(--muted)">(exemplo, troque pelos seus)</span></h2>
+      <div class="field">
+        <label for="custo">Custo direto de <span id="prodName">uma unidade</span></label>
+        <div class="inp"><span>R$</span><input id="custo" inputmode="decimal"></div>
+        <small id="custoHint">Ingredientes e embalagem usados em uma unidade.</small>
+      </div>
+      <div class="row2">
+        <div class="field"><label for="imp">Impostos</label><div class="inp"><input id="imp" inputmode="decimal"><span>%</span></div><small>Ex.: Simples Nacional. Confirme com seu contador.</small></div>
+        <div class="field"><label for="taxa">Taxas sobre a venda</label><div class="inp"><input id="taxa" inputmode="decimal"><span>%</span></div><small>Maquininha e app de entrega.</small></div>
+      </div>
+      <div class="row2">
+        <div class="field"><label for="fixas">Contas fixas do mês</label><div class="inp"><span>R$</span><input id="fixas" inputmode="decimal"></div><small>Aluguel, energia, internet, seu salário.</small></div>
+        <div class="field"><label for="fat">Faturamento médio do mês</label><div class="inp"><span>R$</span><input id="fat" inputmode="decimal"></div><small>Quanto entra de vendas, em média.</small></div>
+      </div>
+      <div class="row2">
+        <div class="field"><label for="lucro">Lucro que você quer</label><div class="inp"><input id="lucro" inputmode="decimal"><span>%</span></div><small>Sobre o preço de venda.</small></div>
+        <div class="field"><label for="atual">Quanto você cobra hoje</label><div class="inp"><span>R$</span><input id="atual" inputmode="decimal"></div><small>Opcional, para comparar.</small></div>
+      </div>
+    </form>
+
+    <section class="panel res" aria-live="polite">
+      <div>
+        <div class="price-label">Preço de venda sugerido</div>
+        <div class="price" id="preco">—</div>
+      </div>
+      <div class="sub"><span>Preço mínimo (lucro zero): <b id="minimo">—</b></span><span>Markup: <b id="mk">—</b></span></div>
+      <div class="bar" id="bar" aria-hidden="true"></div>
+      <ul class="legend" id="leg"></ul>
+      <div id="status"></div>
+      <hr>
+      <small style="color:var(--muted)">Conta usada: preço = custo ÷ (1 − impostos − taxas − contas fixas % − lucro). Contas fixas % = contas fixas ÷ faturamento.</small>
+    </section>
+  </div>
+
+  <section class="cta">
+    <h2 id="ctaT">Isso é um produto. A planilha faz o cardápio inteiro.</h2>
+    <p id="ctaP">Na planilha de precificação você cadastra os ingredientes como compra, monta a ficha técnica de cada receita e vê o preço certo de todos os produtos de uma vez.</p>
+    <ul id="ctaL"></ul>
+    <a class="btn" id="ctaB" target="_blank" rel="noopener" href="#">Conhecer a planilha</a>
+    <div class="others" id="others"></div>
+  </section>
+
+  <footer>Os valores são uma estimativa para ajudar a decidir o preço. Impostos e enquadramento variam: confirme as alíquotas com o seu contador.</footer>
+</div>
+
+<script>
+const N={
+  confeitaria:{prod:"um bolo de chocolate (1 kg)",hint:"Ingredientes e embalagem usados em um bolo.",v:{custo:34.91,imp:6,taxa:3.5,fixas:5800,fat:16000,lucro:15,atual:75},
+    link:"https://go.hotmart.com/A108511810C",t:"Um bolo calculado. A planilha faz o cardápio inteiro.",
+    p:"Na Planilha de Precificação para Confeitaria você cadastra os ingredientes como compra, monta a ficha técnica de cada receita e vê o preço certo de todos os produtos de uma vez.",
+    l:["Custo por grama de cada ingrediente","Ficha técnica de cada receita","Mostra em cores o que está dando prejuízo"]},
+  marmitas:{prod:"uma marmita",hint:"Ingredientes e embalagem de uma marmita.",v:{custo:6.39,imp:6,taxa:12,fixas:8550,fat:25000,lucro:12,atual:16.9},
+    link:"https://go.hotmart.com/S108522533M",t:"Uma marmita calculada. A planilha faz o cardápio inteiro.",
+    p:"Na Planilha de Precificação para Marmitas você monta a ficha de cada panelada e vê o custo por marmita, já com a taxa do app e a embalagem.",
+    l:["Ficha de cada panelada","Custo por marmita com embalagem","Mostra quais marmitas estão abaixo do ideal"]},
+  salgados:{prod:"um cento de salgados",hint:"Massa, recheio, óleo e embalagem de 100 unidades.",v:{custo:55,imp:6,taxa:4,fixas:5720,fat:25000,lucro:15,atual:90},
+    link:"https://go.hotmart.com/N108522560C",t:"Um cento calculado. A planilha faz todos os sabores.",
+    p:"Na Planilha de Precificação para Salgados você monta a ficha de cada receita e vê o preço certo por unidade e por cento, contando óleo de fritura e embalagem.",
+    l:["Ficha técnica de cada salgado","Preço por unidade e por cento","Mostra quais sabores estão abaixo do ideal"]},
+  salao:{prod:"um serviço (ex.: escova)",hint:"Produtos usados no serviço. A planilha completa também calcula o valor do seu minuto.",v:{custo:9.5,imp:6,taxa:4,fixas:6000,fat:15000,lucro:15,atual:35},
+    link:"https://go.hotmart.com/S108522591I",t:"Um serviço calculado. A planilha faz a tabela inteira.",
+    p:"Na Planilha de Precificação para Salão de Beleza você informa o tempo de cada serviço e ela calcula o custo do seu minuto, soma os produtos e mostra o preço certo.",
+    l:["Custo do minuto de atendimento","Produtos usados em cada serviço","Mostra os serviços abaixo do ideal"]},
+  outro:{prod:"uma unidade",hint:"Material, mercadoria e embalagem de uma unidade.",v:{custo:20,imp:6,taxa:4,fixas:4000,fat:16000,lucro:15,atual:35},
+    link:"https://go.hotmart.com/M108451502W",t:"Saber o preço é o começo. O próximo passo é ver o lucro do mês.",
+    p:"A planilha de Controle Financeiro para Pequenos Negócios transforma o extrato do banco em DRE e fluxo de caixa, para você ver quanto sobrou de verdade.",
+    l:["Cole o extrato e ela classifica","DRE mês a mês","Fluxo de caixa que bate com o banco"]}
+};
+const NAMES={confeitaria:"Confeitaria",marmitas:"Marmitas",salgados:"Salgados",salao:"Salão de beleza"};
+const ids=["custo","imp","taxa","fixas","fat","lucro","atual"];
+const $=id=>document.getElementById(id);
+const brl=v=>v.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+const pct=v=>(v*100).toLocaleString("pt-BR",{maximumFractionDigits:1})+"%";
+const fmt=v=>v.toLocaleString("pt-BR",{maximumFractionDigits:2});
+function num(s){s=String(s).trim().replace(/\s|R\$|%/g,"");if(!s)return NaN;if(s.includes(","))s=s.replace(/\./g,"").replace(",",".");return Number(s)}
+let cur="confeitaria";
+function load(n){cur=n;const d=N[n];
+  document.querySelectorAll(".chip").forEach(c=>c.setAttribute("aria-pressed",c.dataset.n===n));
+  ids.forEach(k=>$(k).value=fmt(d.v[k]));$("prodName").textContent=d.prod;$("custoHint").textContent=d.hint;$("ex").hidden=false;
+  $("ctaT").textContent=d.t;$("ctaP").textContent=d.p;$("ctaL").innerHTML=d.l.map(x=>"<li>"+x+"</li>").join("");$("ctaB").href=d.link;
+  $("ctaB").textContent=n==="outro"?"Conhecer a planilha de controle":"Conhecer a planilha";
+  $("others").innerHTML="Planilhas para outros negócios: "+Object.keys(NAMES).filter(k=>k!==n).map(k=>`<a href="${N[k].link}" target="_blank" rel="noopener">${NAMES[k]}</a>`).join(" · ");
+  try{localStorage.setItem("nicho",n)}catch(e){}
+  calc()}
+function note(cls,t,s){return `<div class="note ${cls}"><strong>${t}</strong>${s}</div>`}
+function calc(){
+  const v={};ids.forEach(k=>v[k]=num($(k).value));
+  const bar=$("bar"),leg=$("leg"),st=$("status");
+  const reset=msg=>{$("preco").textContent="—";$("minimo").textContent="—";$("mk").textContent="—";bar.innerHTML="";leg.innerHTML="";st.innerHTML=msg};
+  if(!(v.custo>0))return reset(note("warn","Falta o custo","Digite quanto custa produzir uma unidade."));
+  if(!(v.fat>0))return reset(note("warn","Falta o faturamento","Digite o faturamento médio do mês para dividir as contas fixas."));
+  for(const k of ["imp","taxa","lucro"])if(isNaN(v[k])||v[k]<0)v[k]=0;
+  if(isNaN(v.fixas)||v.fixas<0)v.fixas=0;
+  const i=v.imp/100,t=v.taxa/100,fx=v.fixas/v.fat,l=v.lucro/100,s=i+t+fx+l,smin=i+t+fx;
+  if(s>=1)return reset(note("bad","Assim não fecha a conta",`Impostos, taxas, contas fixas (${pct(fx)}) e lucro somam ${pct(s)} do preço. Precisa ficar abaixo de 100%: reduza as contas fixas, aumente o faturamento ou baixe a meta de lucro.`));
+  const p=v.custo/(1-s),pm=smin<1?v.custo/(1-smin):NaN;
+  $("preco").textContent=brl(p);$("minimo").textContent=isNaN(pm)?"—":brl(pm);$("mk").textContent=(p/v.custo).toLocaleString("pt-BR",{maximumFractionDigits:2})+"×";
+  const segs=[["Custo do produto",v.custo/p,"--seg-custo"],["Impostos",i,"--seg-imp"],["Taxas",t,"--seg-taxa"],["Contas fixas",fx,"--seg-fixas"],["Seu lucro",l,"--seg-lucro"]];
+  bar.innerHTML=segs.map(x=>`<i style="width:${x[1]*100}%;background:var(${x[2]})"></i>`).join("");
+  leg.innerHTML=segs.map(x=>`<li><span class="sw" style="background:var(${x[2]})"></span><span>${x[0]}</span><span class="v">${brl(x[1]*p)}</span><span class="p">${pct(x[1])}</span></li>`).join("");
+  if(v.atual>0){const real=1-v.custo/v.atual-i-t-fx,lr=real*v.atual;
+    if(real>=l-0.0005)st.innerHTML=note("ok","Seu preço atual está bom",`Cobrando ${brl(v.atual)}, sobram ${brl(lr)} de lucro por venda (${pct(real)}).`);
+    else if(real>=0)st.innerHTML=note("warn","Lucro abaixo do que você quer",`Cobrando ${brl(v.atual)}, sobram ${brl(lr)} por venda (${pct(real)}). Para chegar a ${pct(l)}, o preço precisa ser ${brl(p)}.`);
+    else st.innerHTML=note("bad","Seu preço atual dá prejuízo",`Cobrando ${brl(v.atual)}, cada venda perde ${brl(-lr)} depois de pagar custo, impostos, taxas e contas fixas. O mínimo para empatar é ${isNaN(pm)?"—":brl(pm)}.`);
+  }else st.innerHTML="";
+}
+document.querySelectorAll(".chip").forEach(c=>c.addEventListener("click",()=>load(c.dataset.n)));
+ids.forEach(k=>$(k).addEventListener("input",()=>{$("ex").hidden=true;calc()}));
+$("f").addEventListener("submit",e=>e.preventDefault());
+let start="confeitaria";try{const s=localStorage.getItem("nicho");if(s&&N[s])start=s}catch(e){}
+load(start);
+</script>
+
+</head></html>
